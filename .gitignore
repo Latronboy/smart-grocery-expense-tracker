@@ -1,0 +1,12 @@
+node_modules/
+.DS_Store
+npm-debug.log*
+data/*.tmp
+data/*.bak
+.env
+.vscode/
+data/**
+!data/.gitkeep
+.env
+.vscode/
+
