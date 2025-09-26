@@ -44,7 +44,7 @@ Before running this project, make sure you have:
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Latronboy/smart-grocery-expense-tracker
    cd Expense
    ```
 
