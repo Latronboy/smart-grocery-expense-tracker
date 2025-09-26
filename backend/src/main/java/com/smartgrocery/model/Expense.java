@@ -1,14 +1,27 @@
 package com.smartgrocery.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.UuidGenerator;
+import jakarta.persistence.GeneratedValue;
 
-@Document(collection = "expenses")
+@Entity
+@Table(name = "expenses")
 public class Expense {
     @Id
+    @GeneratedValue
+    @UuidGenerator
     private String id;
+
+    @Column(nullable = false)
     private String userId;
-    private String date; // ISO yyyy-MM-dd
+
+    // ISO yyyy-MM-dd
+    @Column(length = 10)
+    private String date;
+
     private double amount;
     private String store;
     private int items;

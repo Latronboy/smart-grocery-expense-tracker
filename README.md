@@ -1,84 +1,245 @@
-Smart Grocery List & Expense Tracker (Full Stack)
+# Smart Grocery List & Expense Tracker
 
-Java Spring Boot + MongoDB backend with React Native mobile app and web frontend.
-
-## Tech Stack
-- **Backend**: Java 17, Spring Boot 3.3, MongoDB
-- **Mobile**: React Native (Expo)
-- **Web**: React (UMD) + Express (legacy)
-- **Database**: MongoDB with Docker
-
-## Quick Start
-
-### 1) Prerequisites
-- Java 17+
-- Node.js 18+ and npm
-- Docker (for MongoDB)
-- Maven
-
-### 2) Start MongoDB
-```bash
-docker compose up -d
-```
-
-### 3) Backend (Spring Boot)
-```bash
-cd backend
-mvn spring-boot:run
-```
-Backend runs on `http://localhost:8080`
-
-### 4) Mobile App (React Native)
-```bash
-cd mobile
-npm install
-npx expo start
-```
-Scan QR code with Expo Go app on your phone.
-
-### 5) Web App (Legacy)
-```bash
-npm install
-npm run dev
-```
-Web app runs on `http://localhost:3000`
+A full-stack application for managing grocery lists and tracking expenses with both web and mobile interfaces.
 
 ## Features
-- **Auth**: JWT-based authentication
-- **Grocery List**: Add, toggle, delete items with categories
-- **Expense Tracker**: Track spending with totals
-- **Mobile**: Native iOS/Android app
-- **Web**: Browser-based interface
+
+- 🔐 **User Authentication** - Secure login/signup with JWT tokens
+- 🛒 **Grocery List Management** - Add, edit, delete grocery items
+- 💰 **Expense Tracking** - Track and categorize expenses
+- 📱 **Mobile App** - React Native mobile application
+- 🌐 **Web Interface** - Responsive web application
+- 📊 **Data Visualization** - Charts and analytics
+- 🔄 **Real-time Sync** - Data syncs between web and mobile
+
+## Tech Stack
+
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **JWT** - Authentication
+- **bcryptjs** - Password hashing
+- **CORS** - Cross-origin resource sharing
+
+### Frontend
+- **React** - Web interface
+- **Tailwind CSS** - Styling
+- **Chart.js** - Data visualization
+
+### Mobile
+- **React Native** - Mobile framework
+- **Expo** - Development platform
+- **React Native Paper** - UI components
+
+## Prerequisites
+
+Before running this project, make sure you have:
+
+- **Node.js** (v14 or higher)
+- **npm** (v6 or higher)
+- **Git**
+- For mobile development: **Expo CLI**
+
+## Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd Expense
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Install mobile dependencies** (if using mobile app)
+   ```bash
+   cd mobile
+   npm install
+   cd ..
+   ```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+PORT=3000
+JWT_SECRET=your-super-secret-jwt-key-here
+NODE_ENV=development
+```
+
+### IP Address Configuration
+
+For mobile app development, update the IP address in:
+- `mobile/src/screens/LoginScreen.js`
+- `mobile/App.js`
+
+Replace `192.168.35.194` with your computer's IP address.
+
+## Running the Application
+
+### Start the Server
+
+```bash
+# Development mode with auto-restart
+npm run dev
+
+# Or run directly
+node server.js
+```
+
+The server will start on `http://localhost:3000`
+
+### Web Application
+
+1. Open your browser
+2. Navigate to `http://localhost:3000`
+3. Use the default credentials:
+   - **Username**: `admin`
+   - **Password**: `password123`
+
+### Mobile Application
+
+1. Install Expo CLI globally:
+   ```bash
+   npm install -g @expo/cli
+   ```
+
+2. Start the mobile app:
+   ```bash
+   cd mobile
+   npx expo start
+   ```
+
+3. Scan the QR code with Expo Go app on your phone
 
 ## API Endpoints
-Base URL: `http://localhost:8080/api`
 
-- **Auth**: `POST /auth/signup`, `POST /auth/login`, `GET /auth/me`
-- **Groceries**: `GET /groceries`, `POST /groceries`, `PUT /groceries/:id`, `DELETE /groceries/:id`
-- **Expenses**: `GET /expenses`, `POST /expenses`, `PUT /expenses/:id`, `DELETE /expenses/:id`
+### Authentication
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/logout` - User logout
+
+### Groceries
+- `GET /api/groceries` - Get user's grocery list
+- `POST /api/groceries` - Add new grocery item
+- `PUT /api/groceries/:id` - Update grocery item
+- `DELETE /api/groceries/:id` - Delete grocery item
+
+### Expenses
+- `GET /api/expenses` - Get user's expenses
+- `POST /api/expenses` - Add new expense
+- `PUT /api/expenses/:id` - Update expense
+- `DELETE /api/expenses/:id` - Delete expense
 
 ## Project Structure
+
 ```
-├── backend/           # Spring Boot API
-├── mobile/            # React Native app
-├── data/             # MongoDB data (gitignored)
-├── docker-compose.yml # MongoDB setup
-└── README.md
+Expense/
+├── backend/                 # Java Spring Boot backend (legacy)
+├── mobile/                  # React Native mobile app
+│   ├── src/
+│   │   └── screens/        # Mobile screens
+│   ├── App.js              # Mobile app entry point
+│   └── package.json
+├── data/                   # Data storage
+│   ├── auth/              # User authentication data
+│   └── users/             # User-specific data
+├── public/                 # Static web assets
+├── server.js              # Node.js server
+├── index.html             # Web application
+├── script.js              # Web application logic
+├── style.css              # Web application styles
+├── package.json           # Dependencies
+└── README.md              # This file
+```
+
+## Data Storage
+
+The application uses file-based storage:
+- User data: `data/auth/users.json`
+- User-specific data: `data/users/{username}/`
+
+## Security Features
+
+- JWT token authentication
+- Password hashing with bcrypt
+- CORS protection
+- Input validation
+- Secure cookie handling
+
+## Development
+
+### Adding New Features
+
+1. **Backend**: Add routes in `server.js`
+2. **Web Frontend**: Update `script.js` and `index.html`
+3. **Mobile**: Update screens in `mobile/src/screens/`
+
+### Database Migration
+
+To clear all data and start fresh:
+```bash
+# Remove all user data
+rm -rf data/users/*
+rm -f data/auth/users.json
 ```
 
 ## Troubleshooting
-- **MongoDB**: Ensure Docker is running and `docker compose up -d` succeeded
-- **Backend**: Check Java 17+ with `java -version`
-- **Mobile**: Install Expo Go app, ensure phone and computer are on same network
-- **Web**: Hard refresh (Ctrl+F5) if assets don't load
 
-## Publish to GitHub
-```bash
-git init
-git add .
-git commit -m "Initial release: Spring Boot + React Native"
-git branch -M main
-git remote add origin https://github.com/<your-username>/<repo>.git
-git push -u origin main
+### Common Issues
+
+1. **"Failed to fetch" error in mobile app**
+   - Check IP address configuration
+   - Ensure server is running
+   - Verify CORS settings
+
+2. **Port already in use**
+   ```bash
+   # Kill existing process
+   taskkill /F /IM node.exe
+   # Or change port in .env file
+   ```
+
+3. **Authentication not working**
+   - Clear browser storage
+   - Check JWT secret configuration
+   - Verify API endpoints
+
+### Debug Mode
+
+Enable debug logging by setting:
+```env
+NODE_ENV=development
 ```
 
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, email your-email@example.com or create an issue in the repository.
+
+## Changelog
+
+### v1.0.0
+- Initial release
+- User authentication
+- Grocery list management
+- Expense tracking
+- Mobile app support
+- Web interface

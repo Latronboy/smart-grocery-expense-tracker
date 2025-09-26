@@ -1,15 +1,24 @@
 package com.smartgrocery.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.UuidGenerator;
 
-@Document(collection = "users")
+@Entity
+@Table(name = "users")
 public class User {
     @Id
+    @GeneratedValue
+    @UuidGenerator
     private String id;
-    @Indexed(unique = true)
+
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(nullable = false)
     private String passwordHash;
 
     public String getId() { return id; }

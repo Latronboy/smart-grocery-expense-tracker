@@ -89,4 +89,9 @@ public class AuthController {
         String username = jwtUtil.getUsernameFromToken(token);
         return ResponseEntity.ok(Map.of("authenticated", true, "user", Map.of("username", username)));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        return ResponseEntity.noContent().build();
+    }
 }

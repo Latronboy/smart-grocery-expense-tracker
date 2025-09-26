@@ -1,14 +1,16 @@
 version: "3.9"
 services:
-  mongo:
-    image: mongo:6
+  postgres:
+    image: postgres:16
     restart: unless-stopped
     ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+      - "5432:5432"
     environment:
-      MONGO_INITDB_DATABASE: smart_grocery
+      POSTGRES_DB: smart_grocery
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data:/var/lib/postgresql/data
 volumes:
-  mongo_data:
+  pg_data:
 

@@ -3,7 +3,7 @@ import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-n
 import { TextInput, Button, Card, Title, Paragraph, Switch } from 'react-native-paper';
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'http://192.168.35.194:3000/api';
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');

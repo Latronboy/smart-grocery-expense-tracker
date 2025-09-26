@@ -18,7 +18,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const JWT_COOKIE = 'auth_token';
 
 // Middleware
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ 
+  origin: true, // Allow all origins for mobile development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 app.use(cookieParser());
@@ -89,7 +94,16 @@ function clearAuthCookie(res) {
 }
 
 function authRequired(req, res, next) {
-  const token = req.cookies[JWT_COOKIE];
+  let token = req.cookies[JWT_COOKIE];
+  
+  // Also check Authorization header for Bearer token
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -169,7 +183,7 @@ api.post('/auth/signup', async (req, res) => {
     await saveUser({ id: userId, username, passwordHash });
     const token = signToken({ sub: userId, username });
     setAuthCookie(res, token);
-    res.status(201).json({ id: userId, username });
+    res.status(201).json({ id: userId, username, token });
   } catch (e) {
     res.status(500).json({ error: 'Failed to signup' });
   }
@@ -186,7 +200,7 @@ api.post('/auth/login', async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
     const token = signToken({ sub: user.id, username: user.username });
     setAuthCookie(res, token);
-    res.json({ id: user.id, username: user.username });
+    res.json({ id: user.id, username: user.username, token });
   } catch (e) {
     res.status(500).json({ error: 'Failed to login' });
   }
@@ -199,7 +213,16 @@ api.post('/auth/logout', (req, res) => {
 
 // Auth status (whoami)
 api.get('/auth/me', (req, res) => {
-  const token = req.cookies[JWT_COOKIE];
+  let token = req.cookies[JWT_COOKIE];
+  
+  // Also check Authorization header for Bearer token
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
   if (!token) return res.status(200).json({ authenticated: false });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -339,8 +362,9 @@ app.get('*', (req, res) => {
 });
 
 await ensureDataFiles();
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server also accessible at http://192.168.35.194:${PORT}`);
 });
 
 

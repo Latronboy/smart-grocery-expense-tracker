@@ -25,7 +25,7 @@ export default function App() {
       const token = await SecureStore.getItemAsync('authToken');
       if (token) {
         // Verify token with backend
-        const response = await fetch('http://localhost:8080/api/auth/me', {
+        const response = await fetch('http://192.168.35.194:3000/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

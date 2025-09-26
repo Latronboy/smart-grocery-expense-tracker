@@ -5,7 +5,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>smart-grocery-backend</name>
-  <description>Spring Boot backend with MongoDB</description>
+  <description>Spring Boot backend with PostgreSQL</description>
   <properties>
     <java.version>17</java.version>
     <spring-boot.version>3.3.1</spring-boot.version>
@@ -29,7 +29,11 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-mongodb</artifactId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>

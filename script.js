@@ -1,5 +1,21 @@
 const { useState, useEffect } = React;
 const { jsPDF } = window.jspdf;
+const API_BASE = window.API_BASE_URL || 'http://localhost:8080';
+
+// Simple JWT storage helpers
+function getToken() {
+    try { return localStorage.getItem('jwt_token') || null; } catch { return null; }
+}
+function setToken(token) {
+    try { if (token) localStorage.setItem('jwt_token', token); } catch {}
+}
+function clearToken() {
+    try { localStorage.removeItem('jwt_token'); } catch {}
+}
+function authHeaders(extra = {}) {
+    const token = getToken();
+    return token ? { ...extra, Authorization: `Bearer ${token}` } : { ...extra };
+}
 
 // Main App Component
 function App() {
@@ -13,7 +29,7 @@ function App() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/auth/me', { credentials: 'include' });
+                const res = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.authenticated) {
@@ -40,11 +56,10 @@ function App() {
 
     const handleLogin = async (username, password, mode = 'login') => {
         try {
-            const endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+            const endpoint = mode === 'signup' ? `${API_BASE}/api/auth/signup` : `${API_BASE}/api/auth/login`;
             const res = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ username, password })
             });
             if (!res.ok) {
@@ -52,6 +67,7 @@ function App() {
                 throw new Error(err.error || 'Authentication failed');
             }
             const data = await res.json();
+            if (data.token) setToken(data.token);
             const uname = data.username || data.id || username;
             setUser({
                 name: uname,
@@ -66,7 +82,8 @@ function App() {
     };
 
     const handleLogout = async () => {
-        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+        try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch {}
+        clearToken();
         setIsAuthenticated(false);
         setUser(null);
     };
@@ -557,7 +574,7 @@ function GroceryList() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/groceries', { credentials: 'include' });
+                const res = await fetch(`${API_BASE}/api/groceries`, { headers: authHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     setItems(Array.isArray(data) ? data : []);
@@ -577,10 +594,9 @@ function GroceryList() {
             purchased: false
         };
         try {
-            const res = await fetch('/api/groceries', {
+            const res = await fetch(`${API_BASE}/api/groceries`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
@@ -596,10 +612,9 @@ function GroceryList() {
         if (!target) return;
         const updated = { ...target, purchased: !target.purchased };
         try {
-            const res = await fetch(`/api/groceries/${id}`, {
+            const res = await fetch(`${API_BASE}/api/groceries/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(updated)
             });
             if (res.ok) {
@@ -611,7 +626,7 @@ function GroceryList() {
     
     const removeItem = async (id) => {
         try {
-            const res = await fetch(`/api/groceries/${id}`, { method: 'DELETE', credentials: 'include' });
+            const res = await fetch(`${API_BASE}/api/groceries/${id}`, { method: 'DELETE', headers: authHeaders() });
             if (res.status === 204) setItems(items.filter(item => item.id !== id));
         } catch {}
     };
@@ -1090,7 +1105,7 @@ function ExpenseTracker() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/expenses', { credentials: 'include' });
+                const res = await fetch(`${API_BASE}/api/expenses`, { headers: authHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     setExpenses(Array.isArray(data) ? data : []);
@@ -1109,10 +1124,9 @@ function ExpenseTracker() {
             items: parseInt(newExpense.items) || 0
         };
         try {
-            const res = await fetch('/api/expenses', {
+            const res = await fetch(`${API_BASE}/api/expenses`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
@@ -1125,7 +1139,7 @@ function ExpenseTracker() {
     
     const removeExpense = async (id) => {
         try {
-            const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE', credentials: 'include' });
+            const res = await fetch(`${API_BASE}/api/expenses/${id}`, { method: 'DELETE', headers: authHeaders() });
             if (res.status === 204) setExpenses(expenses.filter(expense => expense.id !== id));
         } catch {}
     };
