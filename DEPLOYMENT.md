@@ -52,29 +52,158 @@
    heroku open
    ```
 
-### 2. Vercel Deployment
+### 2. Vercel Deployment (Recommended)
 
 #### Prerequisites
-- Vercel account
-- Vercel CLI (optional)
+- Vercel account ([Sign up here](https://vercel.com/signup))
+- Git repository pushed to GitHub/GitLab/Bitbucket
+- Vercel CLI (optional, for command-line deployment)
 
-#### Steps
+#### Method 1: Deploy via Vercel Dashboard (Easiest)
+
+1. **Connect Your Repository**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "Add New Project"
+   - Import your Git repository
+   - Select the repository: `smart-grocery-expense-tracker`
+
+2. **Configure Project**
+   - **Framework Preset**: Other (or Node.js)
+   - **Root Directory**: `./` (leave as default)
+   - **Build Command**: Leave empty or use `npm install`
+   - **Output Directory**: Leave empty
+   - **Install Command**: `npm install`
+
+3. **Set Environment Variables**
+   Click "Environment Variables" and add:
+   
+   | Name | Value | Environment |
+   |------|-------|-------------|
+   | `NODE_ENV` | `production` | Production, Preview, Development |
+   | `JWT_SECRET` | `your-super-secure-random-secret-key-at-least-32-chars` | Production, Preview, Development |
+   
+   **Important**: Generate a strong JWT_SECRET using:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+4. **Deploy**
+   - Click "Deploy"
+   - Wait for deployment to complete (usually 1-2 minutes)
+   - Your app will be live at `https://your-project-name.vercel.app`
+
+#### Method 2: Deploy via Vercel CLI
 
 1. **Install Vercel CLI**
    ```bash
    npm install -g vercel
    ```
 
-2. **Deploy**
+2. **Login to Vercel**
    ```bash
-   vercel
+   vercel login
    ```
 
-3. **Set Environment Variables**
-   - Go to Vercel dashboard
-   - Select your project
-   - Go to Settings > Environment Variables
-   - Add: `JWT_SECRET`, `NODE_ENV`
+3. **Deploy to Production**
+   ```bash
+   # First deployment
+   vercel --prod
+   
+   # Follow the prompts:
+   # - Set up and deploy? Yes
+   # - Which scope? Select your account
+   # - Link to existing project? No
+   # - Project name? smart-grocery-expense-tracker (or your preferred name)
+   # - Directory? ./ (press Enter)
+   # - Override settings? No
+   ```
+
+4. **Set Environment Variables via CLI**
+   ```bash
+   # Set JWT_SECRET
+   vercel env add JWT_SECRET production
+   # Paste your secret when prompted
+   
+   # Set NODE_ENV
+   vercel env add NODE_ENV production
+   # Enter: production
+   ```
+
+5. **Redeploy with Environment Variables**
+   ```bash
+   vercel --prod
+   ```
+
+#### Post-Deployment Configuration
+
+1. **Custom Domain (Optional)**
+   - Go to Project Settings > Domains
+   - Add your custom domain
+   - Follow DNS configuration instructions
+
+2. **Verify Deployment**
+   - Visit your deployment URL
+   - Test authentication (signup/login)
+   - Create test expenses and groceries
+   - Check browser console for errors
+
+3. **Monitor Logs**
+   - Go to Vercel Dashboard > Your Project > Deployments
+   - Click on latest deployment
+   - View "Functions" tab for server logs
+
+#### Important Notes for Vercel
+
+⚠️ **File Storage Limitation**: Vercel serverless functions are stateless. The file-based storage in the `data/` directory will **not persist** between deployments or function invocations. 
+
+**Solutions**:
+1. **For Development/Testing**: Current file storage works fine
+2. **For Production**: Consider migrating to a database:
+   - **Vercel Postgres** (recommended, built-in)
+   - **MongoDB Atlas** (free tier available)
+   - **PlanetScale** (MySQL-compatible)
+   - **Supabase** (PostgreSQL with real-time features)
+
+#### Vercel-Specific Environment Variables
+
+You can also set these optional variables:
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `VERCEL_URL` | Auto-set by Vercel | Your deployment URL |
+| `CORS_ORIGIN` | `https://yourdomain.com` | Specific CORS origin (optional) |
+
+#### Continuous Deployment
+
+Once connected to Git:
+- **Automatic deployments** on every push to `main` branch
+- **Preview deployments** for pull requests
+- **Rollback** to previous deployments anytime
+
+#### Troubleshooting Vercel Deployment
+
+1. **Build Fails**
+   - Check Node.js version in `package.json` engines
+   - Verify all dependencies are in `dependencies`, not `devDependencies`
+   - Check build logs in Vercel dashboard
+
+2. **Function Timeout**
+   - Vercel free tier: 10s timeout
+   - Optimize slow operations
+   - Consider upgrading plan if needed
+
+3. **Environment Variables Not Working**
+   - Ensure variables are set for correct environment
+   - Redeploy after adding variables
+   - Check variable names match exactly (case-sensitive)
+
+4. **CORS Errors**
+   - Update CORS configuration in `server.js`
+   - Add your Vercel domain to allowed origins
+
+5. **Data Not Persisting**
+   - This is expected with file storage on Vercel
+   - Migrate to a database for production use
 
 ### 3. Railway Deployment
 

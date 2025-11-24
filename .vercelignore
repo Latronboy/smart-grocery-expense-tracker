@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+
+# Development files
+.vscode
+.git
+
+# Mobile app (not needed for web deployment)
+mobile
+
+# Backend (if it's a separate deployment)
+backend
+
+# Data files (will be created on Vercel)
+data
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (optional, you can remove these if you want them deployed)
+CHANGELOG.md
+CONTRIBUTING.md
+INSTALLATION.md
+
+# Docker files (not needed on Vercel)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Other
+Smart-Expense

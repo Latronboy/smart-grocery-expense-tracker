@@ -2,6 +2,13 @@
 
 A full-stack application for managing grocery lists and tracking expenses with both web and mobile interfaces.
 
+## 🚀 Quick Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Latronboy/smart-grocery-expense-tracker)
+
+**[📖 Vercel Deployment Guide](./VERCEL_DEPLOY.md)** | **[📚 Full Deployment Docs](./DEPLOYMENT.md)**
+
+
 ## Features
 
 - 🔐 **User Authentication** - Secure login/signup with JWT tokens
@@ -119,7 +126,7 @@ The server will start on `http://localhost:3000`
 
 ## API Endpoints
 
-### Authentication
+<!-- ### Authentication -->
 - `POST /api/auth/signup` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/me` - Get current user
