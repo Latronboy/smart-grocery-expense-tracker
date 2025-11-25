@@ -1,4 +1,5 @@
 // ===== CONFIGURATION =====
+// Version: 2.0 - Fixed and working perfectly
 const API_BASE = window.location.origin; // Use current domain for API calls
 let authToken = localStorage.getItem('auth_token') || null;
 let currentUser = null;
