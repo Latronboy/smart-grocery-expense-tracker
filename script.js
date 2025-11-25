@@ -881,14 +881,62 @@ function toggleTheme() {
 }
 
 function applyTheme() {
-    // Theme switching logic would go here
-    // For now, we're using dark theme by default
+    const root = document.documentElement;
+    if (settings.theme === 'light') {
+        root.style.setProperty('--bg-primary', '#f7fafc');
+        root.style.setProperty('--bg-secondary', '#edf2f7');
+        root.style.setProperty('--bg-card', '#ffffff');
+        root.style.setProperty('--text-primary', '#2d3748');
+        root.style.setProperty('--text-secondary', '#718096');
+        root.style.setProperty('--border', 'rgba(0, 0, 0, 0.1)');
+        root.style.setProperty('--shadow-glow', '0 0 20px rgba(102, 126, 234, 0.2)');
+    } else {
+        root.style.setProperty('--bg-primary', '#0f0f23');
+        root.style.setProperty('--bg-secondary', '#1a1a2e');
+        root.style.setProperty('--bg-card', '#16213e');
+        root.style.setProperty('--text-primary', '#ffffff');
+        root.style.setProperty('--text-secondary', '#a0aec0');
+        root.style.setProperty('--border', 'rgba(255, 255, 255, 0.1)');
+        root.style.setProperty('--shadow-glow', '0 0 20px rgba(102, 126, 234, 0.4)');
+    }
 }
 
 function setColorScheme(color) {
     settings.colorScheme = color;
     localStorage.setItem('colorScheme', color);
-    // Apply color scheme
+    
+    const root = document.documentElement;
+    let primary, primaryDark, secondary, shadowGlow;
+    
+    switch (color) {
+        case 'purple': // Default
+            primary = '#667eea';
+            primaryDark = '#5568d3';
+            secondary = '#764ba2';
+            break;
+        case 'blue':
+            primary = '#4facfe';
+            primaryDark = '#00f2fe';
+            secondary = '#00c6fb';
+            break;
+        case 'green':
+            primary = '#43e97b';
+            primaryDark = '#38f9d7';
+            secondary = '#2af598';
+            break;
+        case 'pink':
+            primary = '#f093fb';
+            primaryDark = '#f5576c';
+            secondary = '#c471ed';
+            break;
+        default:
+            return;
+    }
+    
+    root.style.setProperty('--primary', primary);
+    root.style.setProperty('--primary-dark', primaryDark);
+    root.style.setProperty('--secondary', secondary);
+    root.style.setProperty('--shadow-glow', `0 0 20px ${primary}66`);
 }
 
 // ===== DATA LOADING =====
@@ -901,9 +949,32 @@ async function loadDashboardData() {
 
 // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize
+    // Initialize settings
+    applyTheme();
+    setColorScheme(settings.colorScheme);
+    
+    // Initialize visuals
     init3DBackground();
     initParticles();
+    
+    // Set initial state of toggles
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle && settings.theme === 'light') {
+        // Update icon if needed
+    }
+    
+    const threeDToggle = document.getElementById('3d-toggle');
+    if (threeDToggle) threeDToggle.checked = settings.enable3D;
+    
+    const particlesToggle = document.getElementById('particles-toggle');
+    if (particlesToggle) particlesToggle.checked = settings.enableParticles;
+    
+    // Set active color option
+    document.querySelectorAll('.color-option').forEach(btn => {
+        if (btn.dataset.color === settings.colorScheme) {
+            btn.classList.add('active');
+        }
+    });
     
     // Auth form toggles
     document.getElementById('show-signup')?.addEventListener('click', (e) => {
