@@ -1,12 +1,132 @@
-// ===== CONFIGURATION =====
-// Version: 2.0 - Fixed and working perfectly
-const API_BASE = window.location.origin; // Use current domain for API calls
+// ===== FUTURISTIC EXPENSE TRACKER - ENHANCED VERSION =====
+// Configuration
+const API_BASE = window.location.origin;
 let authToken = localStorage.getItem('auth_token') || null;
 let currentUser = null;
+let currentView = 'dashboard';
+
+// Data stores
+let groceries = [];
+let expenses = [];
+let userProfile = {
+    name: 'User',
+    email: '',
+    avatar: '',
+    memberSince: 'January 2024'
+};
+
+// Settings
+let settings = {
+    theme: localStorage.getItem('theme') || 'dark',
+    colorScheme: localStorage.getItem('colorScheme') || 'purple',
+    enable3D: localStorage.getItem('enable3D') !== 'false',
+    enableParticles: localStorage.getItem('enableParticles') !== 'false'
+};
+
+// ===== 3D BACKGROUND SETUP =====
+let scene, camera, renderer, particles3D = [];
+
+function init3DBackground() {
+    if (!settings.enable3D) return;
+    
+    const canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
+    
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.z = 50;
+    
+    // Create geometric shapes
+    const geometries = [
+        new THREE.BoxGeometry(5, 5, 5),
+        new THREE.SphereGeometry(3, 32, 32),
+        new THREE.TetrahedronGeometry(4),
+        new THREE.OctahedronGeometry(3),
+        new THREE.TorusGeometry(3, 1, 16, 100)
+    ];
+    
+    const material = new THREE.MeshPhongMaterial({
+        color: 0x667eea,
+        transparent: true,
+        opacity: 0.3,
+        wireframe: true
+    });
+    
+    // Add multiple shapes
+    for (let i = 0; i < 15; i++) {
+        const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+        const mesh = new THREE.Mesh(geometry, material.clone());
+        
+        mesh.position.x = (Math.random() - 0.5) * 100;
+        mesh.position.y = (Math.random() - 0.5) * 100;
+        mesh.position.z = (Math.random() - 0.5) * 100;
+        
+        mesh.rotation.x = Math.random() * Math.PI;
+        mesh.rotation.y = Math.random() * Math.PI;
+        
+        mesh.userData = {
+            rotationSpeed: {
+                x: (Math.random() - 0.5) * 0.02,
+                y: (Math.random() - 0.5) * 0.02,
+                z: (Math.random() - 0.5) * 0.02
+            }
+        };
+        
+        scene.add(mesh);
+        particles3D.push(mesh);
+    }
+    
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    
+    const pointLight = new THREE.PointLight(0x667eea, 1, 100);
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
+    
+    animate3D();
+}
+
+function animate3D() {
+    if (!settings.enable3D) return;
+    
+    requestAnimationFrame(animate3D);
+    
+    particles3D.forEach(particle => {
+        particle.rotation.x += particle.userData.rotationSpeed.x;
+        particle.rotation.y += particle.userData.rotationSpeed.y;
+        particle.rotation.z += particle.userData.rotationSpeed.z;
+    });
+    
+    renderer.render(scene, camera);
+}
+
+// ===== PARTICLE SYSTEM =====
+function initParticles() {
+    if (!settings.enableParticles) return;
+    
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 10 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
 
 // ===== UTILITY FUNCTIONS =====
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
+    if (!toast) return;
+    
     toast.textContent = message;
     toast.className = `toast ${type} show`;
     
@@ -16,59 +136,71 @@ function showToast(message, type = 'info') {
 }
 
 function showLoading() {
-    document.getElementById('loading-screen').style.display = 'flex';
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+    }
 }
 
 function hideLoading() {
-    setTimeout(() => {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-    }, 1500);
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+            }, 500);
+        }, 1000);
+    }
 }
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
-    }).format(amount || 0);
+    }).format(amount);
 }
 
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return new Intl.DateTimeFormat('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
-    });
+    }).format(date);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ===== API FUNCTIONS =====
 async function apiCall(endpoint, options = {}) {
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-    
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
-    
     try {
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+        
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
         const response = await fetch(`${API_BASE}${endpoint}`, {
             ...options,
             headers
         });
         
-        if (!response.ok && response.status === 401) {
-            logout();
-            throw new Error('Session expired. Please login again.');
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Request failed');
         }
         
-        if (response.status === 204) {
-            return null;
-        }
-        
-        return await response.json();
+        return data;
     } catch (error) {
         console.error('API Error:', error);
         throw error;
@@ -83,18 +215,16 @@ async function login(username, password) {
             body: JSON.stringify({ username, password })
         });
         
-        if (data.token) {
-            authToken = data.token;
-            localStorage.setItem('auth_token', authToken);
-        }
+        authToken = data.token;
+        currentUser = { id: data.id, username: data.username };
+        localStorage.setItem('auth_token', authToken);
         
-        currentUser = {
-            id: data.id,
-            username: data.username
-        };
+        userProfile.email = data.username;
+        userProfile.name = data.username.split('@')[0];
         
         showToast('Login successful!', 'success');
         showDashboard();
+        loadDashboardData();
     } catch (error) {
         showToast(error.message || 'Login failed', 'error');
     }
@@ -107,18 +237,16 @@ async function signup(username, password) {
             body: JSON.stringify({ username, password })
         });
         
-        if (data.token) {
-            authToken = data.token;
-            localStorage.setItem('auth_token', authToken);
-        }
+        authToken = data.token;
+        currentUser = { id: data.id, username: data.username };
+        localStorage.setItem('auth_token', authToken);
         
-        currentUser = {
-            id: data.id,
-            username: data.username
-        };
+        userProfile.email = data.username;
+        userProfile.name = data.username.split('@')[0];
         
         showToast('Account created successfully!', 'success');
         showDashboard();
+        loadDashboardData();
     } catch (error) {
         showToast(error.message || 'Signup failed', 'error');
     }
@@ -128,26 +256,26 @@ async function checkAuth() {
     if (!authToken) {
         showAuthScreen();
         hideLoading();
-        return false;
+        return;
     }
     
     try {
         const data = await apiCall('/api/auth/me');
-        
         if (data.authenticated && data.user) {
             currentUser = data.user;
+            userProfile.email = data.user.username;
+            userProfile.name = data.user.username.split('@')[0];
             showDashboard();
-            hideLoading();
-            return true;
+            loadDashboardData();
         } else {
-            showAuthScreen();
-            hideLoading();
-            return false;
+            throw new Error('Not authenticated');
         }
     } catch (error) {
+        authToken = null;
+        localStorage.removeItem('auth_token');
         showAuthScreen();
+    } finally {
         hideLoading();
-        return false;
     }
 }
 
@@ -155,11 +283,8 @@ function logout() {
     authToken = null;
     currentUser = null;
     localStorage.removeItem('auth_token');
-    
-    apiCall('/api/auth/logout', { method: 'POST' }).catch(() => {});
-    
-    showAuthScreen();
     showToast('Logged out successfully', 'info');
+    showAuthScreen();
 }
 
 function showAuthScreen() {
@@ -169,46 +294,91 @@ function showAuthScreen() {
 
 function showDashboard() {
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('dashboard-screen').style.display = 'block';
+    document.getElementById('dashboard-screen').style.display = 'flex';
+    updateUserDisplay();
+}
+
+function updateUserDisplay() {
+    const elements = {
+        'user-name-display': userProfile.name,
+        'welcome-user': userProfile.name,
+        'profile-name': userProfile.name,
+        'profile-email': userProfile.email
+    };
     
-    if (currentUser) {
-        document.getElementById('user-name').textContent = currentUser.username || 'User';
+    Object.entries(elements).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    });
+    
+    // Update avatars
+    const avatarUrl = userProfile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name)}&background=667eea&color=fff`;
+    document.querySelectorAll('#user-avatar-mini, #profile-avatar').forEach(img => {
+        if (img) img.src = avatarUrl;
+    });
+}
+
+// ===== NAVIGATION =====
+function switchView(viewName) {
+    currentView = viewName;
+    
+    // Update nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.view === viewName) {
+            item.classList.add('active');
+        }
+    });
+    
+    // Update views
+    document.querySelectorAll('.view-content').forEach(view => {
+        view.classList.remove('active');
+    });
+    
+    const activeView = document.getElementById(`view-${viewName}`);
+    if (activeView) {
+        activeView.classList.add('active');
     }
     
-    loadDashboardData();
+    // Load view-specific data
+    if (viewName === 'groceries') {
+        renderGroceriesFull();
+    } else if (viewName === 'expenses') {
+        renderExpensesFull();
+    } else if (viewName === 'analytics') {
+        renderAnalytics();
+    } else if (viewName === 'profile') {
+        updateProfileStats();
+    }
 }
 
 // ===== GROCERY FUNCTIONS =====
-let groceries = [];
-
 async function loadGroceries() {
     try {
-        groceries = await apiCall('/api/groceries');
+        const data = await apiCall('/api/groceries');
+        groceries = Array.isArray(data) ? data : [];
         renderGroceries();
         updateStats();
     } catch (error) {
-        showToast('Failed to load groceries', 'error');
+        console.error('Failed to load groceries:', error);
     }
 }
 
 async function addGrocery(name, quantity) {
     try {
-        const newGrocery = await apiCall('/api/groceries', {
+        const data = await apiCall('/api/groceries', {
             method: 'POST',
-            body: JSON.stringify({
-                name,
-                quantity: parseInt(quantity) || 1,
-                completed: false
-            })
+            body: JSON.stringify({ name, quantity })
         });
         
-        groceries.push(newGrocery);
+        groceries.push(data);
         renderGroceries();
+        renderGroceriesFull();
         updateStats();
         closeModal('grocery-modal');
         showToast('Grocery item added!', 'success');
     } catch (error) {
-        showToast('Failed to add grocery item', 'error');
+        showToast(error.message || 'Failed to add grocery', 'error');
     }
 }
 
@@ -217,168 +387,251 @@ async function toggleGrocery(id) {
         const grocery = groceries.find(g => g.id === id);
         if (!grocery) return;
         
-        const updated = await apiCall(`/api/groceries/${id}`, {
+        const data = await apiCall(`/api/groceries/${id}`, {
             method: 'PUT',
-            body: JSON.stringify({
-                ...grocery,
-                completed: !grocery.completed
-            })
+            body: JSON.stringify({ ...grocery, completed: !grocery.completed })
         });
         
-        groceries = groceries.map(g => g.id === id ? updated : g);
+        const index = groceries.findIndex(g => g.id === id);
+        if (index !== -1) {
+            groceries[index] = data;
+        }
+        
         renderGroceries();
+        renderGroceriesFull();
         updateStats();
-        showToast('Item updated!', 'success');
+        showToast('Grocery updated!', 'success');
     } catch (error) {
-        showToast('Failed to update item', 'error');
+        showToast(error.message || 'Failed to update grocery', 'error');
     }
 }
 
 async function deleteGrocery(id) {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
     try {
-        await apiCall(`/api/groceries/${id}`, { method: 'DELETE' });
+        await apiCall(`/api/groceries/${id}`, {
+            method: 'DELETE'
+        });
+        
         groceries = groceries.filter(g => g.id !== id);
         renderGroceries();
+        renderGroceriesFull();
         updateStats();
-        showToast('Item deleted!', 'success');
+        showToast('Grocery deleted!', 'success');
     } catch (error) {
-        showToast('Failed to delete item', 'error');
+        showToast(error.message || 'Failed to delete grocery', 'error');
     }
 }
 
 function renderGroceries() {
-    const container = document.getElementById('grocery-list');
+    const container = document.getElementById('grocery-list-container');
+    if (!container) return;
     
     if (groceries.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-shopping-basket"></i>
-                <p>No grocery items yet</p>
+                <p>No groceries yet. Add your first item!</p>
             </div>
         `;
         return;
     }
     
-    container.innerHTML = groceries.map(item => `
-        <div class="item ${item.completed ? 'completed' : ''}">
-            <div class="item-info">
-                <div class="item-name">${escapeHtml(item.name)}</div>
-                <div class="item-details">Quantity: ${item.quantity || 1}</div>
-            </div>
-            <div class="item-actions">
-                <button class="item-btn btn-complete" onclick="toggleGrocery('${item.id}')" title="Toggle Complete">
-                    <i class="fas ${item.completed ? 'fa-undo' : 'fa-check'}"></i>
-                </button>
-                <button class="item-btn btn-delete" onclick="deleteGrocery('${item.id}')" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
+    const recentGroceries = groceries.slice(-5).reverse();
+    container.innerHTML = `
+        <div class="item-list">
+            ${recentGroceries.map(grocery => `
+                <div class="item ${grocery.completed ? 'completed' : ''}">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(grocery.name)}</div>
+                        <div class="item-details">${escapeHtml(grocery.quantity)}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon btn-toggle" onclick="toggleGrocery('${grocery.id}')" title="Toggle">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteGrocery('${grocery.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
         </div>
-    `).join('');
+    `;
+}
+
+function renderGroceriesFull() {
+    const container = document.getElementById('groceries-full-list');
+    if (!container) return;
+    
+    if (groceries.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-shopping-basket"></i>
+                <p>No groceries yet. Start adding items!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="item-list">
+            ${groceries.map(grocery => `
+                <div class="item ${grocery.completed ? 'completed' : ''}">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(grocery.name)}</div>
+                        <div class="item-details">${escapeHtml(grocery.quantity)} • Added ${formatDate(grocery.createdAt)}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon btn-toggle" onclick="toggleGrocery('${grocery.id}')" title="Toggle">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteGrocery('${grocery.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
 // ===== EXPENSE FUNCTIONS =====
-let expenses = [];
-
 async function loadExpenses() {
     try {
-        expenses = await apiCall('/api/expenses');
+        const data = await apiCall('/api/expenses');
+        expenses = Array.isArray(data) ? data : [];
         renderExpenses();
         updateStats();
         renderChart();
     } catch (error) {
-        showToast('Failed to load expenses', 'error');
+        console.error('Failed to load expenses:', error);
     }
 }
 
 async function addExpense(description, amount, category) {
     try {
-        const newExpense = await apiCall('/api/expenses', {
+        const data = await apiCall('/api/expenses', {
             method: 'POST',
-            body: JSON.stringify({
-                description,
-                amount: parseFloat(amount),
-                category
-            })
+            body: JSON.stringify({ description, amount, category })
         });
         
-        expenses.push(newExpense);
+        expenses.push(data);
         renderExpenses();
+        renderExpensesFull();
         updateStats();
         renderChart();
         closeModal('expense-modal');
         showToast('Expense added!', 'success');
     } catch (error) {
-        showToast('Failed to add expense', 'error');
+        showToast(error.message || 'Failed to add expense', 'error');
     }
 }
 
 async function deleteExpense(id) {
+    if (!confirm('Are you sure you want to delete this expense?')) return;
+    
     try {
-        await apiCall(`/api/expenses/${id}`, { method: 'DELETE' });
+        await apiCall(`/api/expenses/${id}`, {
+            method: 'DELETE'
+        });
+        
         expenses = expenses.filter(e => e.id !== id);
         renderExpenses();
+        renderExpensesFull();
         updateStats();
         renderChart();
         showToast('Expense deleted!', 'success');
     } catch (error) {
-        showToast('Failed to delete expense', 'error');
+        showToast(error.message || 'Failed to delete expense', 'error');
     }
 }
 
 function renderExpenses() {
-    const container = document.getElementById('expense-list');
+    const container = document.getElementById('expense-list-container');
+    if (!container) return;
     
     if (expenses.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-wallet"></i>
-                <p>No expenses yet</p>
+                <p>No expenses yet. Add your first expense!</p>
             </div>
         `;
         return;
     }
     
-    container.innerHTML = expenses.map(item => `
-        <div class="item">
-            <div class="item-info">
-                <div class="item-name">${escapeHtml(item.description || 'Expense')}</div>
-                <div class="item-details">
-                    ${item.category || 'Uncategorized'} • ${formatDate(item.createdAt)}
+    const recentExpenses = expenses.slice(-5).reverse();
+    container.innerHTML = `
+        <div class="item-list">
+            ${recentExpenses.map(expense => `
+                <div class="item">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(expense.description)}</div>
+                        <div class="item-details">${expense.category} • ${formatDate(expense.createdAt)}</div>
+                    </div>
+                    <div class="item-info" style="text-align: right;">
+                        <div class="item-name">${formatCurrency(expense.amount)}</div>
+                        <button class="btn-icon btn-delete" onclick="deleteExpense('${expense.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="item-info" style="text-align: right;">
-                <div class="item-name">${formatCurrency(item.amount)}</div>
-                <button class="item-btn btn-delete" onclick="deleteExpense('${item.id}')" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
+            `).join('')}
         </div>
-    `).join('');
+    `;
 }
 
-// ===== STATS & CHART =====
+function renderExpensesFull() {
+    const container = document.getElementById('expenses-full-list');
+    if (!container) return;
+    
+    if (expenses.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-wallet"></i>
+                <p>No expenses yet. Start tracking!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="item-list">
+            ${expenses.map(expense => `
+                <div class="item">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(expense.description)}</div>
+                        <div class="item-details">${expense.category} • ${formatDate(expense.createdAt)}</div>
+                    </div>
+                    <div class="item-info" style="text-align: right;">
+                        <div class="item-name">${formatCurrency(expense.amount)}</div>
+                        <button class="btn-icon btn-delete" onclick="deleteExpense('${expense.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// ===== STATS & CHARTS =====
 function updateStats() {
-    // Total groceries
-    document.getElementById('total-groceries').textContent = groceries.length;
+    const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    const completedItems = groceries.filter(g => g.completed).length;
     
-    // Total expenses
-    const totalExpenses = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-    document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
-    
-    // This month expenses
     const now = new Date();
-    const thisMonth = expenses.filter(e => {
-        const expenseDate = new Date(e.createdAt);
-        return expenseDate.getMonth() === now.getMonth() && 
-               expenseDate.getFullYear() === now.getFullYear();
-    });
-    const monthTotal = thisMonth.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-    document.getElementById('month-expenses').textContent = formatCurrency(monthTotal);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthExpenses = expenses
+        .filter(e => new Date(e.createdAt) >= monthStart)
+        .reduce((sum, e) => sum + parseFloat(e.amount), 0);
     
-    // Completed items
-    const completed = groceries.filter(g => g.completed).length;
-    document.getElementById('completed-items').textContent = completed;
+    document.getElementById('total-groceries').textContent = groceries.length;
+    document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
+    document.getElementById('month-expenses').textContent = formatCurrency(monthExpenses);
+    document.getElementById('completed-items').textContent = completedItems;
 }
 
 let expenseChart = null;
@@ -389,43 +642,123 @@ function renderChart() {
     
     const ctx = canvas.getContext('2d');
     
-    // Destroy existing chart
     if (expenseChart) {
         expenseChart.destroy();
     }
     
-    // Group expenses by category
-    const categoryData = {};
-    expenses.forEach(expense => {
-        const category = expense.category || 'Other';
-        categoryData[category] = (categoryData[category] || 0) + parseFloat(expense.amount || 0);
-    });
+    // Get last 7 days
+    const days = [];
+    const amounts = [];
     
-    const categories = Object.keys(categoryData);
-    const amounts = Object.values(categoryData);
-    
-    if (categories.length === 0) {
-        categories.push('No Data');
-        amounts.push(0);
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        days.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+        
+        const dayExpenses = expenses
+            .filter(e => e.createdAt.startsWith(dateStr))
+            .reduce((sum, e) => sum + parseFloat(e.amount), 0);
+        
+        amounts.push(dayExpenses);
     }
     
-    const colors = [
-        'rgba(102, 126, 234, 0.8)',
-        'rgba(118, 75, 162, 0.8)',
-        'rgba(240, 147, 251, 0.8)',
-        'rgba(245, 87, 108, 0.8)',
-        'rgba(67, 233, 123, 0.8)',
-        'rgba(74, 172, 254, 0.8)',
-        'rgba(254, 202, 87, 0.8)'
-    ];
-    
     expenseChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: [{
+                label: 'Daily Expenses',
+                data: amounts,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(21, 25, 50, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#a0aec0',
+                    borderColor: '#667eea',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: (context) => formatCurrency(context.parsed.y)
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(102, 126, 234, 0.1)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#a0aec0',
+                        callback: (value) => '$' + value
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#a0aec0'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ===== ANALYTICS =====
+function renderAnalytics() {
+    renderCategoryChart();
+    renderTrendChart();
+}
+
+function renderCategoryChart() {
+    const canvas = document.getElementById('category-chart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    const categories = {};
+    expenses.forEach(expense => {
+        categories[expense.category] = (categories[expense.category] || 0) + parseFloat(expense.amount);
+    });
+    
+    new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: categories,
+            labels: Object.keys(categories),
             datasets: [{
-                data: amounts,
-                backgroundColor: colors,
+                data: Object.values(categories),
+                backgroundColor: [
+                    '#667eea',
+                    '#f093fb',
+                    '#4facfe',
+                    '#43e97b',
+                    '#feca57',
+                    '#f5576c'
+                ],
                 borderWidth: 0
             }]
         },
@@ -442,12 +775,72 @@ function renderChart() {
                             size: 12
                         }
                     }
+                }
+            }
+        }
+    });
+}
+
+function renderTrendChart() {
+    const canvas = document.getElementById('trend-chart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Get last 30 days
+    const days = [];
+    const amounts = [];
+    
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        days.push(date.getDate());
+        
+        const dayExpenses = expenses
+            .filter(e => e.createdAt.startsWith(dateStr))
+            .reduce((sum, e) => sum + parseFloat(e.amount), 0);
+        
+        amounts.push(dayExpenses);
+    }
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: days,
+            datasets: [{
+                label: 'Daily Spending',
+                data: amounts,
+                backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                borderColor: '#667eea',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(102, 126, 234, 0.1)'
+                    },
+                    ticks: {
+                        color: '#a0aec0'
+                    }
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.label}: ${formatCurrency(context.parsed)}`;
-                        }
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#a0aec0'
                     }
                 }
             }
@@ -455,7 +848,14 @@ function renderChart() {
     });
 }
 
-// ===== MODAL FUNCTIONS =====
+// ===== PROFILE =====
+function updateProfileStats() {
+    const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    document.getElementById('profile-total-groceries').textContent = groceries.length;
+    document.getElementById('profile-total-expenses').textContent = formatCurrency(totalExpenses);
+}
+
+// ===== MODALS =====
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -467,20 +867,31 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
-        // Reset forms
+        // Reset form if exists
         const form = modal.querySelector('form');
         if (form) form.reset();
     }
 }
 
-// ===== UTILITY =====
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// ===== THEME & SETTINGS =====
+function toggleTheme() {
+    settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', settings.theme);
+    applyTheme();
 }
 
-// ===== DASHBOARD DATA =====
+function applyTheme() {
+    // Theme switching logic would go here
+    // For now, we're using dark theme by default
+}
+
+function setColorScheme(color) {
+    settings.colorScheme = color;
+    localStorage.setItem('colorScheme', color);
+    // Apply color scheme
+}
+
+// ===== DATA LOADING =====
 async function loadDashboardData() {
     await Promise.all([
         loadGroceries(),
@@ -490,6 +901,10 @@ async function loadDashboardData() {
 
 // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize
+    init3DBackground();
+    initParticles();
+    
     // Auth form toggles
     document.getElementById('show-signup')?.addEventListener('click', (e) => {
         e.preventDefault();
@@ -519,17 +934,30 @@ document.addEventListener('DOMContentLoaded', () => {
         await signup(username, password);
     });
     
-    // Logout button
+    // Logout
     document.getElementById('logout-btn')?.addEventListener('click', logout);
     
-    // Add grocery button
-    document.getElementById('add-grocery-btn')?.addEventListener('click', () => {
-        openModal('grocery-modal');
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const view = item.dataset.view;
+            if (view) switchView(view);
+        });
     });
     
-    // Add expense button
-    document.getElementById('add-expense-btn')?.addEventListener('click', () => {
-        openModal('expense-modal');
+    // Add grocery buttons
+    ['add-grocery-btn', 'add-grocery-btn-2', 'quick-add-grocery'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', () => {
+            openModal('grocery-modal');
+        });
+    });
+    
+    // Add expense buttons
+    ['add-expense-btn', 'add-expense-btn-2', 'quick-add-expense'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', () => {
+            openModal('expense-modal');
+        });
     });
     
     // Grocery form
@@ -538,6 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('grocery-name').value;
         const quantity = document.getElementById('grocery-quantity').value;
         await addGrocery(name, quantity);
+        e.target.reset();
     });
     
     // Expense form
@@ -547,6 +976,64 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = document.getElementById('expense-amount').value;
         const category = document.getElementById('expense-category').value;
         await addExpense(description, amount, category);
+        e.target.reset();
+    });
+    
+    // Edit profile
+    document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
+        openModal('edit-profile-modal');
+        document.getElementById('edit-name').value = userProfile.name;
+        document.getElementById('edit-email').value = userProfile.email;
+        document.getElementById('edit-avatar').value = userProfile.avatar;
+    });
+    
+    document.getElementById('edit-profile-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        userProfile.name = document.getElementById('edit-name').value;
+        userProfile.email = document.getElementById('edit-email').value;
+        userProfile.avatar = document.getElementById('edit-avatar').value;
+        updateUserDisplay();
+        closeModal('edit-profile-modal');
+        showToast('Profile updated!', 'success');
+    });
+    
+    // Theme toggle
+    document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+    
+    // Voice command (placeholder)
+    document.getElementById('voice-command')?.addEventListener('click', () => {
+        showToast('Voice command feature coming soon!', 'info');
+    });
+    
+    // Color scheme
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.color-option').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            setColorScheme(btn.dataset.color);
+        });
+    });
+    
+    // 3D toggle
+    document.getElementById('3d-toggle')?.addEventListener('change', (e) => {
+        settings.enable3D = e.target.checked;
+        localStorage.setItem('enable3D', settings.enable3D);
+        if (settings.enable3D) {
+            init3DBackground();
+        }
+    });
+    
+    // Particles toggle
+    document.getElementById('particles-toggle')?.addEventListener('change', (e) => {
+        settings.enableParticles = e.target.checked;
+        localStorage.setItem('enableParticles', settings.enableParticles);
+        const particlesContainer = document.getElementById('particles');
+        if (particlesContainer) {
+            particlesContainer.innerHTML = '';
+            if (settings.enableParticles) {
+                initParticles();
+            }
+        }
     });
     
     // Modal close buttons
@@ -569,7 +1056,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Check authentication on load
+    // Window resize for 3D
+    window.addEventListener('resize', () => {
+        if (renderer && camera) {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    });
+    
+    // Check authentication
     checkAuth();
 });
 

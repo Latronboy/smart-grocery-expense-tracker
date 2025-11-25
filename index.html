@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Grocery & Expense Tracker</title>
-    <meta name="description" content="Track your groceries and expenses with style - A modern, beautiful expense tracking application">
+    <title>Smart Expense Tracker - Futuristic Edition</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,15 +16,31 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
+    <!-- Three.js for 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- 3D Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+    
+    <!-- Particle System -->
+    <div id="particles"></div>
+
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loader-container">
-            <div class="loader"></div>
-            <p class="loading-text">Loading your experience...</p>
+            <div class="cyber-loader">
+                <div class="cyber-ring"></div>
+                <div class="cyber-ring"></div>
+                <div class="cyber-ring"></div>
+            </div>
+            <p class="loading-text">INITIALIZING SYSTEM...</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
         </div>
     </div>
 
@@ -34,179 +49,526 @@
         <!-- Auth Screen -->
         <div id="auth-screen" class="auth-screen">
             <div class="auth-container">
-                <div class="auth-card">
+                <div class="auth-card glass-effect">
                     <div class="auth-header">
                         <div class="logo-container">
-                            <div class="logo-icon">
-                                <i class="fas fa-shopping-cart"></i>
+                            <div class="logo-icon cyber-glow">
+                                <i class="fas fa-brain"></i>
                             </div>
-                            <h1 class="app-title">Smart Tracker</h1>
+                            <h1 class="app-title cyber-text">SMART TRACKER</h1>
+                            <div class="cyber-line"></div>
                         </div>
-                        <p class="app-subtitle">Manage groceries & expenses beautifully</p>
+                        <p class="app-subtitle">Next-Gen Expense Management System</p>
                     </div>
 
                     <!-- Login Form -->
                     <div id="login-form" class="auth-form">
-                        <h2 class="form-title">Welcome Back</h2>
+                        <h2 class="form-title">ACCESS TERMINAL</h2>
                         <form id="login-form-element">
                             <div class="form-group">
-                                <label for="login-username">
-                                    <i class="fas fa-user"></i> Username
-                                </label>
-                                <input type="text" id="login-username" required placeholder="Enter your username">
+                                <label><i class="fas fa-envelope"></i> Email Address</label>
+                                <input type="email" id="login-username" required placeholder="Enter your email">
                             </div>
                             <div class="form-group">
-                                <label for="login-password">
-                                    <i class="fas fa-lock"></i> Password
-                                </label>
+                                <label><i class="fas fa-lock"></i> Password</label>
                                 <input type="password" id="login-password" required placeholder="Enter your password">
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt"></i> Sign In
+                            <div class="form-options">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="remember-me">
+                                    <span class="checkmark"></span>
+                                    Remember me
+                                </label>
+                                <a href="#" class="link-primary">Forgot Password?</a>
+                            </div>
+                            <button type="submit" class="btn btn-primary cyber-btn">
+                                <span>SIGN IN</span>
+                                <i class="fas fa-arrow-right"></i>
                             </button>
                         </form>
                         <p class="form-switch">
                             Don't have an account? 
-                            <a href="#" id="show-signup">Sign up</a>
+                            <a href="#" id="show-signup" class="link-accent">Create Account</a>
                         </p>
                     </div>
 
                     <!-- Signup Form -->
                     <div id="signup-form" class="auth-form" style="display: none;">
-                        <h2 class="form-title">Create Account</h2>
+                        <h2 class="form-title">CREATE ACCOUNT</h2>
                         <form id="signup-form-element">
                             <div class="form-group">
-                                <label for="signup-username">
-                                    <i class="fas fa-user"></i> Username
-                                </label>
-                                <input type="text" id="signup-username" required placeholder="Choose a username">
+                                <label><i class="fas fa-envelope"></i> Email Address</label>
+                                <input type="email" id="signup-username" required placeholder="Enter your email">
                             </div>
                             <div class="form-group">
-                                <label for="signup-password">
-                                    <i class="fas fa-lock"></i> Password
-                                </label>
-                                <input type="password" id="signup-password" required placeholder="Choose a password">
+                                <label><i class="fas fa-lock"></i> Password</label>
+                                <input type="password" id="signup-password" required placeholder="Create a password">
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-user-plus"></i> Sign Up
+                            <button type="submit" class="btn btn-primary cyber-btn">
+                                <span>CREATE ACCOUNT</span>
+                                <i class="fas fa-user-plus"></i>
                             </button>
                         </form>
                         <p class="form-switch">
                             Already have an account? 
-                            <a href="#" id="show-login">Sign in</a>
+                            <a href="#" id="show-login" class="link-accent">Sign In</a>
                         </p>
                     </div>
-                </div>
-
-                <!-- Decorative Elements -->
-                <div class="floating-shapes">
-                    <div class="shape shape-1"></div>
-                    <div class="shape shape-2"></div>
-                    <div class="shape shape-3"></div>
                 </div>
             </div>
         </div>
 
         <!-- Main Dashboard -->
         <div id="dashboard-screen" class="dashboard-screen" style="display: none;">
-            <!-- Navigation -->
-            <nav class="navbar">
-                <div class="nav-content">
-                    <div class="nav-brand">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar glass-effect">
+                <div class="sidebar-header">
+                    <div class="logo-mini cyber-glow">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h2 class="sidebar-title cyber-text">SMART</h2>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-view="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="groceries">
                         <i class="fas fa-shopping-cart"></i>
-                        <span>Smart Tracker</span>
+                        <span>Groceries</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="expenses">
+                        <i class="fas fa-wallet"></i>
+                        <span>Expenses</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="analytics">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="budget">
+                        <i class="fas fa-piggy-bank"></i>
+                        <span>Budget</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="profile">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <button class="btn btn-logout" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-area">
+                <!-- Top Bar -->
+                <header class="top-bar glass-effect">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search anything..." id="global-search">
                     </div>
-                    <div class="nav-user">
-                        <span class="user-name" id="user-name">User</span>
-                        <button id="logout-btn" class="btn btn-logout">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                    
+                    <div class="top-bar-actions">
+                        <button class="icon-btn" id="theme-toggle" title="Toggle Theme">
+                            <i class="fas fa-moon"></i>
                         </button>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- Main Content -->
-            <main class="main-content">
-                <!-- Stats Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="fas fa-shopping-basket"></i>
-                        </div>
-                        <div class="stat-info">
-                            <p class="stat-label">Total Groceries</p>
-                            <h3 class="stat-value" id="total-groceries">0</h3>
+                        <button class="icon-btn" id="voice-command" title="Voice Command">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="icon-btn notification-btn" id="notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        <div class="user-profile-mini" id="user-menu-toggle">
+                            <img src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff" alt="User" id="user-avatar-mini">
+                            <span id="user-name-display">User</span>
+                            <i class="fas fa-chevron-down"></i>
                         </div>
                     </div>
+                </header>
 
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                            <i class="fas fa-dollar-sign"></i>
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="view-content active">
+                    <div class="view-header">
+                        <div>
+                            <h1 class="view-title cyber-text">DASHBOARD</h1>
+                            <p class="view-subtitle">Welcome back, <span id="welcome-user">User</span></p>
                         </div>
-                        <div class="stat-info">
-                            <p class="stat-label">Total Expenses</p>
-                            <h3 class="stat-value" id="total-expenses">$0</h3>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-info">
-                            <p class="stat-label">This Month</p>
-                            <h3 class="stat-value" id="month-expenses">$0</h3>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="stat-info">
-                            <p class="stat-label">Completed Items</p>
-                            <h3 class="stat-value" id="completed-items">0</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Grid -->
-                <div class="content-grid">
-                    <!-- Grocery List Section -->
-                    <div class="section-card">
-                        <div class="section-header">
-                            <h2><i class="fas fa-shopping-cart"></i> Grocery List</h2>
-                            <button class="btn btn-add" id="add-grocery-btn">
-                                <i class="fas fa-plus"></i> Add Item
+                        <div class="quick-actions">
+                            <button class="btn btn-primary" id="quick-add-grocery">
+                                <i class="fas fa-plus"></i> Add Grocery
                             </button>
-                        </div>
-                        <div class="section-content">
-                            <div id="grocery-list" class="item-list"></div>
-                        </div>
-                    </div>
-
-                    <!-- Expense Tracker Section -->
-                    <div class="section-card">
-                        <div class="section-header">
-                            <h2><i class="fas fa-wallet"></i> Expenses</h2>
-                            <button class="btn btn-add" id="add-expense-btn">
+                            <button class="btn btn-accent" id="quick-add-expense">
                                 <i class="fas fa-plus"></i> Add Expense
                             </button>
                         </div>
-                        <div class="section-content">
-                            <div id="expense-list" class="item-list"></div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card glass-effect cyber-border">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-shopping-basket"></i>
+                            </div>
+                            <div class="stat-info">
+                                <p class="stat-label">Total Groceries</p>
+                                <h3 class="stat-value" id="total-groceries">0</h3>
+                                <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 12% this week</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card glass-effect cyber-border">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-info">
+                                <p class="stat-label">Total Expenses</p>
+                                <h3 class="stat-value" id="total-expenses">$0</h3>
+                                <span class="stat-change negative"><i class="fas fa-arrow-down"></i> 5% this week</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card glass-effect cyber-border">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <p class="stat-label">This Month</p>
+                                <h3 class="stat-value" id="month-expenses">$0</h3>
+                                <span class="stat-change positive"><i class="fas fa-arrow-up"></i> On track</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card glass-effect cyber-border">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <p class="stat-label">Completed Items</p>
+                                <h3 class="stat-value" id="completed-items">0</h3>
+                                <span class="stat-change positive"><i class="fas fa-arrow-up"></i> Great job!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Grid -->
+                    <div class="content-grid">
+                        <!-- Recent Groceries -->
+                        <div class="section-card glass-effect cyber-border">
+                            <div class="section-header">
+                                <h3><i class="fas fa-shopping-cart"></i> Recent Groceries</h3>
+                                <button class="btn btn-sm btn-primary" id="add-grocery-btn">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                            <div class="section-content" id="grocery-list-container">
+                                <div class="empty-state">
+                                    <i class="fas fa-shopping-basket"></i>
+                                    <p>No groceries yet. Add your first item!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Expenses -->
+                        <div class="section-card glass-effect cyber-border">
+                            <div class="section-header">
+                                <h3><i class="fas fa-receipt"></i> Recent Expenses</h3>
+                                <button class="btn btn-sm btn-accent" id="add-expense-btn">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                            <div class="section-content" id="expense-list-container">
+                                <div class="empty-state">
+                                    <i class="fas fa-wallet"></i>
+                                    <p>No expenses yet. Add your first expense!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Section -->
+                    <div class="chart-section glass-effect cyber-border">
+                        <div class="section-header">
+                            <h3><i class="fas fa-chart-area"></i> Expense Analytics</h3>
+                            <div class="chart-controls">
+                                <button class="btn btn-sm" data-period="week">Week</button>
+                                <button class="btn btn-sm active" data-period="month">Month</button>
+                                <button class="btn btn-sm" data-period="year">Year</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="expense-chart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- Chart Section -->
-                <div class="chart-section">
-                    <div class="section-card">
-                        <div class="section-header">
-                            <h2><i class="fas fa-chart-pie"></i> Expense Analytics</h2>
+                <!-- Groceries View -->
+                <div id="view-groceries" class="view-content">
+                    <div class="view-header">
+                        <div>
+                            <h1 class="view-title cyber-text">GROCERIES</h1>
+                            <p class="view-subtitle">Manage your shopping list</p>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="expense-chart"></canvas>
+                        <button class="btn btn-primary" id="add-grocery-btn-2">
+                            <i class="fas fa-plus"></i> Add Grocery
+                        </button>
+                    </div>
+                    <div class="groceries-grid" id="groceries-full-list">
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-basket"></i>
+                            <p>No groceries yet. Start adding items!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expenses View -->
+                <div id="view-expenses" class="view-content">
+                    <div class="view-header">
+                        <div>
+                            <h1 class="view-title cyber-text">EXPENSES</h1>
+                            <p class="view-subtitle">Track all your expenses</p>
+                        </div>
+                        <button class="btn btn-accent" id="add-expense-btn-2">
+                            <i class="fas fa-plus"></i> Add Expense
+                        </button>
+                    </div>
+                    <div class="expenses-grid" id="expenses-full-list">
+                        <div class="empty-state">
+                            <i class="fas fa-wallet"></i>
+                            <p>No expenses yet. Start tracking!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics View -->
+                <div id="view-analytics" class="view-content">
+                    <div class="view-header">
+                        <h1 class="view-title cyber-text">ANALYTICS</h1>
+                        <p class="view-subtitle">Deep insights into your spending</p>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="analytics-card glass-effect cyber-border">
+                            <h3><i class="fas fa-chart-pie"></i> Category Breakdown</h3>
+                            <canvas id="category-chart"></canvas>
+                        </div>
+                        <div class="analytics-card glass-effect cyber-border">
+                            <h3><i class="fas fa-chart-line"></i> Spending Trend</h3>
+                            <canvas id="trend-chart"></canvas>
+                        </div>
+                        <div class="analytics-card glass-effect cyber-border">
+                            <h3><i class="fas fa-lightbulb"></i> AI Insights</h3>
+                            <div class="insights-list">
+                                <div class="insight-item">
+                                    <i class="fas fa-robot"></i>
+                                    <p>You're spending 20% more on groceries this month</p>
+                                </div>
+                                <div class="insight-item">
+                                    <i class="fas fa-robot"></i>
+                                    <p>Consider setting a budget for entertainment</p>
+                                </div>
+                                <div class="insight-item">
+                                    <i class="fas fa-robot"></i>
+                                    <p>Great job! You saved $150 this week</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget View -->
+                <div id="view-budget" class="view-content">
+                    <div class="view-header">
+                        <div>
+                            <h1 class="view-title cyber-text">BUDGET PLANNER</h1>
+                            <p class="view-subtitle">Set and track your financial goals</p>
+                        </div>
+                        <button class="btn btn-primary" id="add-budget-btn">
+                            <i class="fas fa-plus"></i> Add Budget
+                        </button>
+                    </div>
+                    <div class="budget-grid">
+                        <div class="budget-card glass-effect cyber-border">
+                            <div class="budget-header">
+                                <h3><i class="fas fa-utensils"></i> Food & Groceries</h3>
+                                <span class="budget-amount">$500 / $800</span>
+                            </div>
+                            <div class="budget-progress">
+                                <div class="progress-bar" style="width: 62.5%; background: linear-gradient(90deg, #43e97b, #38f9d7);"></div>
+                            </div>
+                            <p class="budget-status">62.5% used - $300 remaining</p>
+                        </div>
+                        <div class="budget-card glass-effect cyber-border">
+                            <div class="budget-header">
+                                <h3><i class="fas fa-car"></i> Transportation</h3>
+                                <span class="budget-amount">$150 / $200</span>
+                            </div>
+                            <div class="budget-progress">
+                                <div class="progress-bar" style="width: 75%; background: linear-gradient(90deg, #4facfe, #00f2fe);"></div>
+                            </div>
+                            <p class="budget-status">75% used - $50 remaining</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile View -->
+                <div id="view-profile" class="view-content">
+                    <div class="view-header">
+                        <h1 class="view-title cyber-text">PROFILE</h1>
+                        <p class="view-subtitle">Manage your account</p>
+                    </div>
+                    <div class="profile-container">
+                        <div class="profile-card glass-effect cyber-border">
+                            <div class="profile-header">
+                                <div class="profile-avatar-large">
+                                    <img src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff&size=200" alt="Profile" id="profile-avatar">
+                                    <button class="avatar-edit-btn">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                                <div class="profile-info">
+                                    <h2 id="profile-name">User Name</h2>
+                                    <p id="profile-email">user@example.com</p>
+                                    <button class="btn btn-primary" id="edit-profile-btn">
+                                        <i class="fas fa-edit"></i> Edit Profile
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-stats">
+                                <div class="profile-stat">
+                                    <i class="fas fa-calendar"></i>
+                                    <div>
+                                        <h4>Member Since</h4>
+                                        <p>January 2024</p>
+                                    </div>
+                                </div>
+                                <div class="profile-stat">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <div>
+                                        <h4>Total Groceries</h4>
+                                        <p id="profile-total-groceries">0</p>
+                                    </div>
+                                </div>
+                                <div class="profile-stat">
+                                    <i class="fas fa-receipt"></i>
+                                    <div>
+                                        <h4>Total Expenses</h4>
+                                        <p id="profile-total-expenses">$0</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="profile-actions">
+                                <button class="profile-action-btn">
+                                    <i class="fas fa-download"></i>
+                                    <span>Export Data</span>
+                                </button>
+                                <button class="profile-action-btn">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Import Data</span>
+                                </button>
+                                <button class="profile-action-btn">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Privacy Settings</span>
+                                </button>
+                                <button class="profile-action-btn danger">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Delete Account</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="view-settings" class="view-content">
+                    <div class="view-header">
+                        <h1 class="view-title cyber-text">SETTINGS</h1>
+                        <p class="view-subtitle">Customize your experience</p>
+                    </div>
+                    <div class="settings-container">
+                        <div class="settings-section glass-effect cyber-border">
+                            <h3><i class="fas fa-palette"></i> Appearance</h3>
+                            <div class="setting-item">
+                                <div>
+                                    <h4>Theme</h4>
+                                    <p>Choose your preferred theme</p>
+                                </div>
+                                <select class="setting-select" id="theme-select">
+                                    <option value="dark">Dark Mode</option>
+                                    <option value="light">Light Mode</option>
+                                    <option value="auto">Auto</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <h4>Color Scheme</h4>
+                                    <p>Select your accent color</p>
+                                </div>
+                                <div class="color-picker">
+                                    <button class="color-option active" data-color="purple" style="background: linear-gradient(135deg, #667eea, #764ba2);"></button>
+                                    <button class="color-option" data-color="blue" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></button>
+                                    <button class="color-option" data-color="green" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></button>
+                                    <button class="color-option" data-color="pink" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section glass-effect cyber-border">
+                            <h3><i class="fas fa-bell"></i> Notifications</h3>
+                            <div class="setting-item">
+                                <div>
+                                    <h4>Email Notifications</h4>
+                                    <p>Receive updates via email</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <h4>Budget Alerts</h4>
+                                    <p>Get notified when approaching budget limits</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-section glass-effect cyber-border">
+                            <h3><i class="fas fa-cog"></i> Advanced</h3>
+                            <div class="setting-item">
+                                <div>
+                                    <h4>3D Effects</h4>
+                                    <p>Enable 3D background animations</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="3d-toggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <h4>Particle Effects</h4>
+                                    <p>Show particle animations</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="particles-toggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -217,27 +579,25 @@
     <!-- Modals -->
     <!-- Add Grocery Modal -->
     <div id="grocery-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content glass-effect cyber-border">
             <div class="modal-header">
-                <h3><i class="fas fa-shopping-basket"></i> Add Grocery Item</h3>
+                <h3><i class="fas fa-shopping-cart"></i> Add Grocery Item</h3>
                 <button class="modal-close" data-modal="grocery-modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <form id="grocery-form">
                 <div class="form-group">
-                    <label for="grocery-name">Item Name</label>
+                    <label>Item Name</label>
                     <input type="text" id="grocery-name" required placeholder="e.g., Milk, Bread, Eggs">
                 </div>
                 <div class="form-group">
-                    <label for="grocery-quantity">Quantity</label>
-                    <input type="number" id="grocery-quantity" min="1" value="1" required>
+                    <label>Quantity</label>
+                    <input type="text" id="grocery-quantity" required placeholder="e.g., 2 liters, 1 pack">
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" data-modal="grocery-modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add Item
-                    </button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
                 </div>
             </form>
         </div>
@@ -245,40 +605,67 @@
 
     <!-- Add Expense Modal -->
     <div id="expense-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content glass-effect cyber-border">
             <div class="modal-header">
-                <h3><i class="fas fa-dollar-sign"></i> Add Expense</h3>
+                <h3><i class="fas fa-wallet"></i> Add Expense</h3>
                 <button class="modal-close" data-modal="expense-modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <form id="expense-form">
                 <div class="form-group">
-                    <label for="expense-description">Description</label>
+                    <label>Description</label>
                     <input type="text" id="expense-description" required placeholder="What did you buy?">
                 </div>
                 <div class="form-group">
-                    <label for="expense-amount">Amount ($)</label>
-                    <input type="number" id="expense-amount" step="0.01" min="0" required placeholder="0.00">
+                    <label>Amount ($)</label>
+                    <input type="number" id="expense-amount" step="0.01" required placeholder="0.00">
                 </div>
                 <div class="form-group">
-                    <label for="expense-category">Category</label>
+                    <label>Category</label>
                     <select id="expense-category" required>
-                        <option value="">Select a category</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Health">Health</option>
-                        <option value="Other">Other</option>
+                        <option value="">Select category</option>
+                        <option value="food">Food & Groceries</option>
+                        <option value="transport">Transportation</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" data-modal="expense-modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add Expense
-                    </button>
+                    <button type="submit" class="btn btn-accent">Add Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content glass-effect cyber-border">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                <button class="modal-close" data-modal="edit-profile-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="edit-name" required placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="edit-email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Avatar URL</label>
+                    <input type="url" id="edit-avatar" placeholder="https://...">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-modal="edit-profile-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -287,7 +674,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <!-- Main Script -->
+    <!-- Custom Script -->
     <script src="script.js"></script>
 </body>
 </html>
