@@ -13,7 +13,7 @@
         },
         {
             "src": "/(style\\.css|script\\.js)",
-            "dest": "/$1"
+            "dest": "$1"
         },
         {
             "src": "/(.*)",
