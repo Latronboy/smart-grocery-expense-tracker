@@ -1,7 +1,7 @@
 // Generate a secure JWT secret for production use
 // Run this with: node generate-jwt-secret.js
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const secret = crypto.randomBytes(32).toString('hex');
 
