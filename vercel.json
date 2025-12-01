@@ -2,8 +2,20 @@
     "version": 2,
     "builds": [
         {
-            "src": "package.json",
+            "src": "server.js",
             "use": "@vercel/node"
+        },
+        {
+            "src": "style.css",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "script.js",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "index.html",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
@@ -12,8 +24,8 @@
             "dest": "/server.js"
         },
         {
-            "src": "/(style\\.css|script\\.js)",
-            "dest": "$1"
+            "src": "/(style\\.css|script\\.js|index\\.html)",
+            "dest": "/$1"
         },
         {
             "src": "/(.*)",
