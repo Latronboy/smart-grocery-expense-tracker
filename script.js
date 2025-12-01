@@ -144,12 +144,27 @@ function showLoading() {
 
 function hideLoading() {
     const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
+    const app = document.getElementById('app');
+    
+    if (loadingScreen && app) {
+        // Force app to be visible immediately to avoid flickering
+        // but keep it behind loading screen for a moment
+        
         setTimeout(() => {
             loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
-                document.getElementById('app').style.display = 'block';
+                loadingScreen.remove(); // Remove from DOM to be sure
+                
+                app.style.display = 'block';
+                // Force opacity to 1 in case CSS animation failed
+                app.style.opacity = '1'; 
+                app.style.animation = 'none'; // Disable conflicting animation
+                
+                // Trigger resize for charts/3D
+                window.dispatchEvent(new Event('resize'));
             }, 500);
         }, 1000);
     }
@@ -209,11 +224,14 @@ async function apiCall(endpoint, options = {}) {
 
 // ===== AUTHENTICATION =====
 async function login(username, password) {
+    console.log('Attempting login for:', username);
     try {
         const data = await apiCall('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ username, password })
         });
+        
+        console.log('Login response:', data);
         
         authToken = data.token;
         currentUser = { id: data.id, username: data.username };
@@ -223,9 +241,11 @@ async function login(username, password) {
         userProfile.name = data.username.split('@')[0];
         
         showToast('Login successful!', 'success');
+        console.log('Calling showDashboard...');
         showDashboard();
         loadDashboardData();
     } catch (error) {
+        console.error('Login error:', error);
         showToast(error.message || 'Login failed', 'error');
     }
 }
@@ -253,7 +273,9 @@ async function signup(username, password) {
 }
 
 async function checkAuth() {
+    console.log('Checking auth...');
     if (!authToken) {
+        console.log('No auth token found');
         showAuthScreen();
         hideLoading();
         return;
@@ -261,6 +283,7 @@ async function checkAuth() {
     
     try {
         const data = await apiCall('/api/auth/me');
+        console.log('Auth check response:', data);
         if (data.authenticated && data.user) {
             currentUser = data.user;
             userProfile.email = data.user.username;
@@ -271,6 +294,7 @@ async function checkAuth() {
             throw new Error('Not authenticated');
         }
     } catch (error) {
+        console.error('Auth check failed:', error);
         authToken = null;
         localStorage.removeItem('auth_token');
         showAuthScreen();
@@ -283,6 +307,10 @@ function logout() {
     authToken = null;
     currentUser = null;
     localStorage.removeItem('auth_token');
+    
+    // Call API to clear cookie
+    apiCall('/api/auth/logout', { method: 'POST' }).catch(console.error);
+    
     showToast('Logged out successfully', 'info');
     showAuthScreen();
 }
@@ -293,9 +321,13 @@ function showAuthScreen() {
 }
 
 function showDashboard() {
+    console.log('Showing dashboard...');
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'flex';
     updateUserDisplay();
+    
+    // Force layout recalculation
+    window.dispatchEvent(new Event('resize'));
 }
 
 function updateUserDisplay() {
