@@ -227,9 +227,8 @@ app.get('/auth/me', (req, res) => {
   }
 });
 
-// Per-user context middleware
-app.use(authRequired);
-app.use(async (req, res, next) => {
+// Per-user context middleware (only for protected routes)
+const userContextMiddleware = async (req, res, next) => {
   try {
     const userId = req.auth?.sub || getUserId(req);
     const userPaths = await ensureUserFiles(userId);
@@ -242,10 +241,10 @@ app.use(async (req, res, next) => {
   } catch (e) {
     res.status(500).json({ error: 'Failed to initialize user storage' });
   }
-});
+};
 
-// Expenses CRUD
-app.get('/expenses', async (req, res) => {
+// Expenses CRUD (protected routes)
+app.get('/expenses', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const items = await readJson(req.userPaths.expensesPath);
     res.json(items);
@@ -254,7 +253,7 @@ app.get('/expenses', async (req, res) => {
   }
 });
 
-app.post('/expenses', async (req, res) => {
+app.post('/expenses', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const payload = req.body || {};
     const items = await readJson(req.userPaths.expensesPath);
@@ -267,7 +266,7 @@ app.post('/expenses', async (req, res) => {
   }
 });
 
-app.put('/expenses/:id', async (req, res) => {
+app.put('/expenses/:id', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const items = await readJson(req.userPaths.expensesPath);
@@ -282,7 +281,7 @@ app.put('/expenses/:id', async (req, res) => {
   }
 });
 
-app.delete('/expenses/:id', async (req, res) => {
+app.delete('/expenses/:id', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const items = await readJson(req.userPaths.expensesPath);
@@ -296,7 +295,7 @@ app.delete('/expenses/:id', async (req, res) => {
 });
 
 // Groceries CRUD
-app.get('/groceries', async (req, res) => {
+app.get('/groceries', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const items = await readJson(req.userPaths.groceriesPath);
     res.json(items);
@@ -305,7 +304,7 @@ app.get('/groceries', async (req, res) => {
   }
 });
 
-app.post('/groceries', async (req, res) => {
+app.post('/groceries', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const payload = req.body || {};
     const items = await readJson(req.userPaths.groceriesPath);
@@ -318,7 +317,7 @@ app.post('/groceries', async (req, res) => {
   }
 });
 
-app.put('/groceries/:id', async (req, res) => {
+app.put('/groceries/:id', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const items = await readJson(req.userPaths.groceriesPath);
@@ -333,7 +332,7 @@ app.put('/groceries/:id', async (req, res) => {
   }
 });
 
-app.delete('/groceries/:id', async (req, res) => {
+app.delete('/groceries/:id', authRequired, userContextMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const items = await readJson(req.userPaths.groceriesPath);
